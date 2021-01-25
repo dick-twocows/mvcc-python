@@ -21,10 +21,12 @@ class TestInMemoryTransactions(unittest.TestCase):
         print("client1 read_committed")
         for i in client1.read_committed():
             print(i)
+        print(sum(1 for record in client1.read_committed()))
         print("end")
         print("client1 read_dirty")
         for i in client1.read_dirty():
             print(i)
+        print(sum(1 for record in client1.read_dirty()))
         print("end")
 
         client1.remove_record(id=1)

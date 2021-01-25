@@ -15,6 +15,21 @@ class Transaction(ABC):
         self.remove_record(record['id'])
         self.add_record(record)
 
+    @abstractmethod
+    def record_is_locked(self, record) -> bool:
+        pass
+
+    @abstractmethod
+    def record_is_visible(self, record) -> bool:
+        pass
+
+    @abstractmethod
+    def commit(self) -> bool:
+        pass
+
+    @abstractmethod
+    def rollback(self) -> bool:
+        pass
 
 class Transactions(ABC):
 

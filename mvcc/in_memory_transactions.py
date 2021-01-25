@@ -16,14 +16,14 @@ class InMemoryTransaction(Transaction):
     def remove_record(self, id):
         for i, record in enumerate(self.in_memory_transactions.records):
             if self.record_is_visible(record) and record['id'] == id:
-                if self.row_is_locked(record):
+                if self.record_is_locked(record):
                     # raise Error("Row locked by another transaction.")
                     print("Locked by another transaction")
                 else:
                     record['expired_xid'] = self.xid
                     self.rollback_actions.append(["add", i])
 
-    def row_is_locked(self, record):
+    def record_is_locked(self, record):
         return record['expired_xid'] != 0 and \
                record['expired_xid'] in self.in_memory_transactions.active_xids
 
@@ -38,6 +38,20 @@ class InMemoryTransaction(Transaction):
         if record['expired_xid'] != 0 and \
                 (record['expired_xid'] not in self.in_memory_transactions.active_xids or record['expired_xid'] == self.xid):
             return False
+
+        return True
+
+    def commit(self) -> bool:
+        self.in_memory_transactions.active_xids.discard(self.xid)
+        return True
+
+    def rollback(self) -> bool:
+        for action in reversed(self.rollback_actions):
+            if action[0] == 'add':
+                self.in_memory_transactions.records[action[1]]['expired_xid'] = 0
+            elif action[0] == 'delete':
+                self.in_memory_transactions.records[action[1]]['expired_xid'] = self.xid
+        self.in_memory_transactions.active_xids.discard(self.xid)
 
         return True
 
@@ -58,26 +72,21 @@ class InMemoryTransaction(Transaction):
         for record in self.in_memory_transactions.records:
             yield record
 
-    def commit(self):
-        self.in_memory_transactions.active_xids.discard(self.xid)
-
-    def rollback(self):
-        for action in reversed(self.rollback_actions):
-            if action[0] == 'add':
-                self.in_memory_transactions.records[action[1]]['expired_xid'] = 0
-            elif action[0] == 'delete':
-                self.in_memory_transactions.records[action[1]]['expired_xid'] = self.xid
-
-        self.in_memory_transactions.active_xids.discard(self.xid)
-
 
 class InMemoryTransactions(Transactions):
 
-    next_xid = 1
+    # next_xid = 1
     active_xids = set()
     records = []
 
-    def new(self) -> Transaction:
-        self.next_xid += 1
+    def __init__(self):
+        self._next_xid = 1
+
+    @property
+    def next_xid(self) -> int:
+        return self._next_xid
+
+    def new(self) -> InMemoryTransaction:
+        self._next_xid += 1
         self.active_xids.add(self.next_xid)
         return InMemoryTransaction(self, self.next_xid)
