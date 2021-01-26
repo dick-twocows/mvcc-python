@@ -29,7 +29,7 @@ class TestInMemoryTransactions(unittest.TestCase):
         print(sum(1 for record in client1.read_dirty()))
         print("end")
 
-        client1.remove_record(id=1)
+        client1.remove_record(record_id=1)
         # print(client1.fetch_all())
 
         client1.update_record({'id': 2, 'name': 'Tom'})

@@ -31,6 +31,7 @@ class Transaction(ABC):
     def rollback(self) -> bool:
         pass
 
+
 class Transactions(ABC):
 
     @abstractmethod
